@@ -4,7 +4,7 @@
 2. How to execute:
    To run  subKMeans with wine dataset use following command:
         python main.py
-To use subKMeans with arbitrary dataset (as 2D array named X)
+   To use subKMeans with arbitrary dataset (as 2D array named X)
    in Python code use (similar to sklearn.kmeans):
         subkmeans = SubKMeans(n_clusters=3).fit(X)
         #clustered labels are accessible through
