@@ -10,6 +10,7 @@ from scipy.io import arff
 import time
 
 
+# Example of using with dataset packed in .csv
 def read_data():
     df = pd.read_csv("data/soybean/soybean.csv", sep=';', encoding='', header=None)
     X = np.array(df.iloc[:, 1:])
@@ -17,6 +18,7 @@ def read_data():
     return X, labels
 
 
+# Example of using with dataset packed in .arff
 def read_symbols():
     dataset = arff.loadarff("symbols.arff")
     df = pd.DataFrame(dataset[0])
@@ -25,6 +27,7 @@ def read_symbols():
     return X, y
 
 
+# Method of visualising results (scatterplot)
 def visualize_results(X, labels):
     data = pd.DataFrame(data=X)
     color_wheel = {1: "#0392cf",
@@ -35,19 +38,19 @@ def visualize_results(X, labels):
     plt.show()
 
 
+# Complete example of usage.
+# Non-commented code proceeds clustering over wine dataset
 def main():
     # X, labels = read_symbols()
     dataset = datasets.load_wine()
     X = dataset.data
     labels = dataset.target
     X = skPreprocessing.scale(X)
-
     # Perform clustering
     start_time = time.time()
     subkmeans = SubKMeans(n_clusters=3).fit(X)
     print("SubKMeans: Clustering took: " + str(time.time() - start_time) + " s")
     print("SubKMeans: NMI score: " + str(metrics.normalized_mutual_info_score(subkmeans.labels_, labels)))
-
     # Get scatter plot for output of the algorithm
     # visualize_results(np.dot(X, subkmeans.V), subkmeans.labels_)
 
