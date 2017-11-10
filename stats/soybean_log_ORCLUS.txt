@@ -1,0 +1,18 @@
+Labels_True:,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4
+1th_PredictedLabels:,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+
+1,1.0,1.0,0.359015381498
+
+
+===== Summary =====
+NMI score : 1.0
+FMI score : 1.0
+Silhouette Coefficient : 0.359015381498
+
+# of Class : 4, # of Data Points : 47, # of Dimensions : 35 
+Shape of X_scaled [47 35]
+Clustering took     s
+
+9 ms
+Current number of clusters:: 4 
+de.lmu.ifi.dbs.elki.algorithm.clustering.correlation.ORCLUS.runtime: 723 ms
