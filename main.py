@@ -7,6 +7,7 @@ from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 from sklearn import preprocessing as skPreprocessing
 from scipy.io import arff
+import time
 
 
 def read_data():
@@ -34,14 +35,22 @@ def visualize_results(X, labels):
     plt.show()
 
 
-# X, labels = read_symbols()
-dataset = datasets.load_wine()
-X = dataset.data
-labels = dataset.target
-X = skPreprocessing.scale(X)
+def main():
+    # X, labels = read_symbols()
+    dataset = datasets.load_wine()
+    X = dataset.data
+    labels = dataset.target
+    X = skPreprocessing.scale(X)
 
-subkmeans = SubKMeans(n_clusters=3).fit(X)
+    # Perform clustering
+    start_time = time.time()
+    subkmeans = SubKMeans(n_clusters=3).fit(X)
+    print("SubKMeans: Clustering took: " + str(time.time() - start_time) + " s")
+    print("SubKMeans: NMI score: " + str(metrics.normalized_mutual_info_score(subkmeans.labels_, labels)))
 
-print(metrics.normalized_mutual_info_score(subkmeans.labels_, labels))
+    # Get scatter plot for output of the algorithm
+    # visualize_results(np.dot(X, subkmeans.V), subkmeans.labels_)
 
-# visualize_results(np.dot(X, subkmeans.V), subkmeans.labels_)
+
+if __name__ == "__main__":
+    main()

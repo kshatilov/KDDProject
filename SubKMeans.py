@@ -3,9 +3,18 @@ import numpy as np
 import math
 import random
 
+"""
+
+Python implementation of SubKMeans clustering algorithm
+All credits go to authors of the paper "Towards an Optimal Subspace for K-Means"
+Dominik Mautz, Wei Ye, Claudia Plant, Christian Böhm
+KDD’17, August 13–17, 2017, Halifax, NS, Canada
+
+"""
+
 
 class SubKMeans:
-    # TODO doc
+    # Calculates dataset (or cluster) mean
     @staticmethod
     def calculate_dataset_mean(X):
         if len(X) <= 0:
@@ -17,16 +26,18 @@ class SubKMeans:
             m[...] = m / len(X)
         return mean
 
-    # TODO doc
+    # Calculates scatter matrix of dataset (or cluster)
     @staticmethod
     def calculate_scatter_matrix(x):
         d = len(x)
+        if d == 0:
+            return [0]
         c = np.identity(d) - np.multiply(1. / d, np.ones((d, d)))
         s_d = np.dot(x.T, c)
         s_d = np.dot(s_d, x)
         return s_d
 
-    # TODO doc
+    # Returns projection matrix onto first m attributes
     @staticmethod
     def get_projection_matrix(m, d):
         p = np.identity(m)
@@ -34,17 +45,26 @@ class SubKMeans:
         p = np.append(p, zeros, 1)
         return p
 
-    # TODO doc
+    # Returns projection matrix for last (d-m) attributes
+    @staticmethod
+    def get_p_n(m, d):
+        p = np.identity(d - m)
+        zeros = np.zeros((d - m, m))
+        p = np.append(zeros, p, 1)
+        return p
+
+    # Returns n random datapoints from given dataset
     @staticmethod
     def get_random_datapoints(X, n):
         return random.choices(X, k=n)
 
-    # TODO doc
+    # Evaluates simplified cost function for given datapoint and cluster mean
     @staticmethod
     def cost_function_i(_x, _cluster_mean):
         return math.pow(np.linalg.norm(_x - _cluster_mean), 2)
 
-    # TODO doc
+    # Evaluates cost function for given datapoint and cluster mean
+    # DEPRECATED
     def cost_function(self, x, cluster_mean):
         _x = np.dot(self.pT, self.V.T)
         _x = np.dot(_x, x)
@@ -52,7 +72,7 @@ class SubKMeans:
         _cluster_mean = np.dot(_cluster_mean, cluster_mean)
         return math.pow(np.linalg.norm(_x - _cluster_mean), 2)
 
-    # TODO doc
+    # Performs eigendecomposition of scatter matrices
     def eig(self):
         sm = np.zeros((self.d, self.d))
         for si in self.scatter_mx:
@@ -60,7 +80,8 @@ class SubKMeans:
         sm = np.subtract(sm, self.S_D)
         return np.linalg.eig(sm)
 
-    # TODO doc
+    # Changes the number of dimensions of clustering subspace
+    # to the amount of negative eigenvalues
     def updateM(self, E):
         count = 0
         for e in E:
@@ -68,24 +89,30 @@ class SubKMeans:
                 count = count + 1
         return count
 
-    # TODO doc
+    # Calculates cost function, which is supposed to be minimised.
+    # If value of cost_function doesn't changed returns true, meaning convergence
     def convergence(self):
         total_error = 0.
         for error in self.cluster_errors:
             total_error = total_error + error
 
         # second part of cost function
+        _p_n = SubKMeans.get_p_n(self.m, self.d)
+        _phi_D = np.dot(_p_n, self.V.T)
+        _phi_D = np.dot(_phi_D, self.phi_D)
         for x in self.X:
+            _x = np.dot(_p_n, self.V.T)
+            _x = np.dot(_x, x)
             total_error = \
                 total_error + \
-                self.cost_function(x, self.phi_D)
+                self.cost_function_i(_x, _phi_D)
 
         prev = self.cost_function_value
         self.cost_function_value = total_error
         if math.fabs(prev - total_error) < 0.0001:
             return True
 
-    # TODO doc
+    # Initialises class, with given number of clusters
     def __init__(self, n_clusters=2):
         if not isinstance(n_clusters, int) or n_clusters <= 0:
             raise ValueError('SubKMeans: Number of clusters should be positive integer')
@@ -106,17 +133,15 @@ class SubKMeans:
         self.X = []
         self.pT = []
 
-    # TODO doc
+    # Performs (subspace) clustering over given dataset X
     def fit(self, X):
-        # TODO check params
         if len(X) <= 0:
-            return self
+            raise ValueError('SubKMeans: Dataset is corrupted')
 
         # INITIALIZATION
         self.X = X
         self.d = len(X[0])
         self.m = int(math.floor(math.sqrt(self.d)))
-        # self.m = math.floor(self.d / 2.)
         self.V = rvs(self.d)
         self.phi_D = self.calculate_dataset_mean(X)
         self.S_D = self.calculate_scatter_matrix(X)
