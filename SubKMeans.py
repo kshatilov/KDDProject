@@ -1,3 +1,6 @@
+#!/usr/local/bin/python
+# coding: utf-8
+import os, sys
 from Utilities import rvs
 import numpy as np
 import math
