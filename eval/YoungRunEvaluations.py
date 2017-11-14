@@ -1,7 +1,11 @@
-# setup
+#!/usr/local/bin/python
+# coding: utf-8
+import os, sys
+sys.path.append('../')
 import numpy as np
 import pandas as pd
 import scipy as sp
+from scipy.io import arff
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sklearn.cluster as skCluster
@@ -13,59 +17,37 @@ from sklearn import preprocessing as skPreprocessing
 from sklearn import metrics as skMetrics
 #from sklearn.metrics import pairwise_distances
 #from sklearn.cluster import KMeans
-from scipy.io import arff
 import time
 from SubKMeans import SubKMeans
-# %matplotlib inline
 
 
 def runEvalMetrics(X, labels_true, labels_pred, f):
-	# print ("runEvalMetrics")
 	half_run = labels_pred.shape[0]
 	nmi_score = np.zeros(half_run)
 	fmi_score = np.zeros(half_run)
 	sil_score = np.zeros(half_run)
-	f.write("Labels_True:,")
-	for j in range( len(labels_true)-1 ):
-		f.write( str(labels_true[j])+',')
-	f.write( str(labels_true[j])+'\n')
 
-	for i in range( half_run ):
-		f.write( str(i+1) + "th_" +"PredictedLabels:,")
-		for j in range( labels_pred.shape[1]-1 ):
-			f.write( str(int(labels_pred[i,j]) )+',' )
-		f.write( str( int(labels_pred[i,j]) )  +'\n' )
-	f.write('\n')
 	for i in range(half_run):
 		nmi_score[i] = skMetrics.normalized_mutual_info_score(labels_true, labels_pred[i])
 		fmi_score[i] = skMetrics.fowlkes_mallows_score(labels_true, labels_pred[i])
 		sil_score[i] = skMetrics.silhouette_score(X, labels_pred[i], metric='euclidean')
-		f.write(str(i+1)+','+str(nmi_score[i])+','+str(fmi_score[i])+','+str(sil_score[i])+'\n')
-		# print ("i nmi fmi sil", i, nmi_score[i], fmi_score[i], sil_score[i])
 
-	f.write('\n\n')
 	f.write("===== Summary =====\n")
 	f.write ("NMI score : " + str( np.sum(nmi_score)/float(half_run) ) + "\n" )
 	f.write ("FMI score : " + str( np.sum(fmi_score)/float(half_run) ) + "\n" )
 	f.write ("Silhouette Coefficient : " + str( np.sum(sil_score)/float(half_run) ) + "\n" )
-	# print ("NMI score : ", str( np.sum(nmi_score)/float(half_run) ) )
-	# print ("FMI score : ", str( np.sum(fmi_score)/float(half_run) ) )
-	# print ("Silhouette Coefficient : ", str( np.sum(fmi_score)/float(half_run) ) )
 
 
 def removeHalfUpperCosts(costs, labels_pred, numDataPnt):
-	# print ("removeHalfUpperCosts")
 	full_run = labels_pred.shape[0]
-	half_run = full_run/2
+	half_run = int(full_run/2)
 	mid_cost = np.partition(costs, half_run-1)[half_run-1]
-	# print ("mid_cost : ", mid_cost)
 	labels_half = np.zeros( (half_run, numDataPnt) )
 	cnt = 0
 	for j in range(full_run):
 		if ( costs[j] <= mid_cost ):
 			labels_half[cnt] = labels_pred[j]
 			cnt += 1
-			# print (costs[j] )
 			if ( cnt >= half_run):
 				break
 	return labels_half
@@ -88,7 +70,7 @@ def runPCA(log_name):
 	X_pca = pca.fit(X_scaled).transform(X_scaled)
 	costs = np.zeros(NUM_RUN)
 	labels_pred = np.zeros( (NUM_RUN, numDataPnt) )
-	labels_half = np.zeros( (NUM_RUN/2, numDataPnt) )
+	labels_half = np.zeros( (int(NUM_RUN/2), numDataPnt) )
 	for i in range(NUM_RUN):
 		kmeans_model = skCluster.KMeans(n_clusters=numClass, init='random').fit(X_pca)
 		costs[i] = kmeans_model.inertia_
@@ -122,7 +104,7 @@ def runFastICA(log_name):
 	X_ica = ica.fit(X_scaled).transform(X_scaled)
 	costs = np.zeros(NUM_RUN)
 	labels_pred = np.zeros( (NUM_RUN, numDataPnt) )
-	labels_half = np.zeros( (NUM_RUN/2, numDataPnt) )
+	labels_half = np.zeros( (int(NUM_RUN/2), numDataPnt) )
 	for i in range(NUM_RUN):
 		kmeans_model = skCluster.KMeans(n_clusters=numClass, init='random').fit(X_ica)
 		costs[i] = kmeans_model.inertia_
@@ -155,7 +137,7 @@ def runLDA(log_name):
 	X_lda = lda.fit(X_scaled, y).transform(X_scaled)
 	costs = np.zeros(NUM_RUN)
 	labels_pred = np.zeros( (NUM_RUN, numDataPnt) )
-	labels_half = np.zeros( (NUM_RUN/2, numDataPnt) )
+	labels_half = np.zeros( (int(NUM_RUN/2), numDataPnt) )
 	for i in range(NUM_RUN):
 		kmeans_model = skCluster.KMeans(n_clusters=numClass, init='random').fit(X_lda)
 		costs[i] = kmeans_model.inertia_
@@ -186,7 +168,7 @@ def runSubKmeans(log_name):
 	start_time = time.time()
 	costs = np.zeros(NUM_RUN)
 	labels_pred = np.zeros( (NUM_RUN, numDataPnt) )
-	labels_half = np.zeros( (NUM_RUN/2, numDataPnt) )
+	labels_half = np.zeros( (int(NUM_RUN/2), numDataPnt) )
 	for i in range(NUM_RUN):
 		subkmeans = SubKMeans(n_clusters=numClass).fit(X_scaled)
 		costs[i] = subkmeans.cost_function_value
@@ -227,7 +209,7 @@ f_soybean_log = 'soybean_log'
 f_plane_log = 'plane_log'
 f_stickfigures_log = 'stickfigures_log'
 
-NUM_RUN = 40
+NUM_RUN = 2
 
 
 print (" =========== Evaluation for Wines ========== ")
@@ -235,67 +217,67 @@ data_wine = skDatasets.load_wine()
 X = data_wine.data
 y = data_wine.target
 df = pd.DataFrame(np.hstack(( X, np.matrix(y).T )))
-# runPCA(f_wine_log)
-# runFastICA(f_wine_log)
-# runLDA(f_wine_log)
+runPCA(f_wine_log)
+runFastICA(f_wine_log)
+runLDA(f_wine_log)
 runSubKmeans(f_wine_log)
 
-print (" =========== Evaluation for Ecoli ========== ")
-df = pd.read_csv(f_ecoli, delim_whitespace=True, header=None)
+# print (" =========== Evaluation for Ecoli ========== ")
+# df = pd.read_csv(f_ecoli, delim_whitespace=True, header=None)
 # runPCA(f_ecoli_log)
 # runFastICA(f_ecoli_log)
 # runLDA(f_ecoli_log)
-runSubKmeans(f_ecoli_log)
+# runSubKmeans(f_ecoli_log)
 
-print (" =========== Evaluation for Seeds ========== ")
-df = pd.read_csv(f_seeds, delim_whitespace=True, header=None)
+# print (" =========== Evaluation for Seeds ========== ")
+# df = pd.read_csv(f_seeds, delim_whitespace=True, header=None)
 # runPCA(f_seeds_log)
 # runFastICA(f_seeds_log)
 # runLDA(f_seeds_log)
-runSubKmeans(f_seeds_log)
+# runSubKmeans(f_seeds_log)
 
-print (" =========== Evaluation for Pendigits ========== ")
-df = pd.read_csv(f_pendigits, sep=',', header=None)
+# print (" =========== Evaluation for Pendigits ========== ")
+# df = pd.read_csv(f_pendigits, sep=',', header=None)
 # runPCA(f_pendigits_log)
 # runFastICA(f_pendigits_log)
 # runLDA(f_pendigits_log)
-runSubKmeans(f_pendigits_log)
+# runSubKmeans(f_pendigits_log)
 
-print (" =========== Evaluation for Soybean ========== ")
-df = pd.read_csv(f_soybean, sep=',', header=None)
+# print (" =========== Evaluation for Soybean ========== ")
+# df = pd.read_csv(f_soybean, sep=',', header=None)
 # runPCA(f_soybean_log)
 # runFastICA(f_soybean_log)
 # runLDA(f_soybean_log)
-runSubKmeans(f_soybean_log)
+# runSubKmeans(f_soybean_log)
 
-print (" =========== Evaluation for Symbols ========== ")
-dataset = arff.loadarff( f_symbol_test )
-df = pd.DataFrame(dataset[0])
+# print (" =========== Evaluation for Symbols ========== ")
+# dataset = arff.loadarff( f_symbol_test )
+# df = pd.DataFrame(dataset[0])
 # runPCA(f_symbols_log)
 # runFastICA(f_symbols_log)
 # runLDA(f_symbols_log)
-runSubKmeans(f_symbols_log)
+# runSubKmeans(f_symbols_log)
 
-print (" =========== Evaluation for OliveOil ========== ")
-dataset = arff.loadarff( f_oliveoil )
-df = pd.DataFrame(dataset[0])
+# print (" =========== Evaluation for OliveOil ========== ")
+# dataset = arff.loadarff( f_oliveoil )
+# df = pd.DataFrame(dataset[0])
 # runPCA(f_oliveoil_log)
 # runFastICA(f_oliveoil_log)
 # runLDA(f_oliveoil_log)
-runSubKmeans(f_oliveoil_log)
+# runSubKmeans(f_oliveoil_log)
 
-print (" =========== Evaluation for Plane ========== ")
-dataset = arff.loadarff( f_plane )
-df = pd.DataFrame(dataset[0])
+# print (" =========== Evaluation for Plane ========== ")
+# dataset = arff.loadarff( f_plane )
+# df = pd.DataFrame(dataset[0])
 # runPCA(f_plane_log)
 # runFastICA(f_plane_log)
 # runLDA(f_plane_log)
-runSubKmeans(f_plane_log)
+# runSubKmeans(f_plane_log)
 
-print (" =========== Evaluation for stickfigures ========== ")
-dataset = arff.loadarff( f_stickfigures )
-df = pd.DataFrame(dataset[0])
+# print (" =========== Evaluation for stickfigures ========== ")
+# dataset = arff.loadarff( f_stickfigures )
+# df = pd.DataFrame(dataset[0])
 # runPCA(f_stickfigures_log)
 # runFastICA(f_stickfigures_log)
 # runLDA(f_stickfigures_log)
-runSubKmeans(f_stickfigures_log)
+# runSubKmeans(f_stickfigures_log)
