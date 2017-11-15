@@ -1,4 +1,5 @@
-# setup
+import os, sys
+sys.path.append('../')
 import numpy as np
 import pandas as pd
 import scipy as sp
