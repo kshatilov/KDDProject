@@ -90,7 +90,7 @@ class SubKMeans:
         return count
 
     # Calculates cost function, which is supposed to be minimised.
-    # If value of cost_function doesn't changed returns true, meaning convergence
+    # If value of cost_function is not changed through iterations, function returns true, meaning convergence
     def convergence(self):
         total_error = 0.
         for error in self.cluster_errors:
@@ -200,7 +200,7 @@ class SubKMeans:
             # Infinite loop termination
             iterations = iterations + 1
             if iterations > 9999:
-                print("SubKMeans: Too many iterations aborting clustering...")
+                print("SubKMeans: Too many iterations, aborting clustering...")
                 break
 
         self.labels_ = np.array(self.labels_)
